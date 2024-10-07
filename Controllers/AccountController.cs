@@ -82,6 +82,8 @@ namespace MyWebApi.Controllers
             if (diposit > 0 && diposit<=_sender.Balance) {
                 _sender.Balance -= Decimal.Round(diposit, 2);
                 _recipient.Balance += Decimal.Round(diposit, 2);
+                _context.SaveChanges();
+                return Ok();
             }
             else return Content("Неверная сумма перевода или недостаточно средств для перевода!");
         }
