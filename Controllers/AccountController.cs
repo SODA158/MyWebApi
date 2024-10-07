@@ -74,20 +74,16 @@ namespace MyWebApi.Controllers
         {
             var _sender = _context.Accounts.FirstOrDefault(w => w.Id == senderid);
             var _recipient = _context.Accounts.FirstOrDefault(w => w.Id == recipientid);
-            if (_sender == null) return NotFound();
-            if (_recipient == null) return NotFound();
-            if(_sender.Blocked) return Content("Счет заблокирован!");
-            if (_recipient.Blocked) return Content("Счет заблокирован!");
+            if (_sender == null) return Content("Счет отправителя не найден!");
+            if (_recipient == null) return Content("Счет получателя не найден!");
+            if(_sender.Blocked) return Content("Счет отправителя заблокирован!");
+            if (_recipient.Blocked) return Content("Счет получателя заблокирован!");
 
-
-            if (_userAccount.Blocked) return Content("Счет заблокирован!");
-            else if (diposit > 0)
-            {
-                _userAccount.Balance += Decimal.Round(diposit, 2);
-                _context.SaveChanges();
-                return Ok();
+            if (diposit > 0 && diposit<=_sender.Balance) {
+                _sender.Balance -= Decimal.Round(diposit, 2);
+                _recipient.Balance += Decimal.Round(diposit, 2);
             }
-            else return Content("Сумма для пополнения не может быть меньше либо равна 0!");
+            else return Content("Неверная сумма перевода или недостаточно средств для перевода!");
         }
 
 
@@ -99,7 +95,7 @@ namespace MyWebApi.Controllers
             if (_userAccount == null) return NotFound();
 
             if (_userAccount.Blocked)  return Content("Счет заблокирован!");
-            else if (_userAccount.Balance > diposit)
+            else if (_userAccount.Balance >= diposit)
             {
                 _userAccount.Balance -= Decimal.Round(diposit, 2);
                 _context.SaveChanges();
