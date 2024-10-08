@@ -10,139 +10,85 @@ using System.Xml;
 namespace MyWebApi.Controllers
 {
     [ApiController]
-    [Route("api/Account")]
+    [Route("api/[controller]")]
     public class AccountController : Controller
     {
-       private AppDBContext _context;
-       public AccountController(AppDBContext context)
+        private IAccountService _accountService;
+        public AccountController(IAccountService accountService)
         {
-            _context = context;
+            _accountService = accountService;
         }
 
-
-        [HttpPost("Create")]
-        public IActionResult Create(Account NewAccount)
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
         {
-            var _userAccount = _context.Accounts.FirstOrDefault(w => w.Id == NewAccount.Id);
-            if (_userAccount != null) return Content("Счет уже зарегистрирован!");
-            else
-            {
-                NewAccount.Balance = Decimal.Round(NewAccount.Balance,2);
-                _context.Accounts.Add(NewAccount);
-                _context.SaveChanges();
-                return Ok();
-            }
+            var _accounts = _accountService.GetAllAccountAsync();
+            return Ok(_accounts);
         }
 
-        [HttpGet("Get/{id}")]
-        public IActionResult Get(int id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
         {
-            var _userAccount = _context.Accounts.FirstOrDefault(w => w.Id == id);
+            var _userAccount = await _accountService.GetAccountByIdAsync(id);
             if (_userAccount == null) return NotFound();
-            else return new JsonResult(_userAccount);
+            else return Ok(_userAccount);
         }
 
-
-        [HttpGet("AllAccounts")]
-        public IActionResult GetAll()
+        [HttpPost]
+        public async Task<IActionResult> Create(Account NewAccount)
         {
-            return new JsonResult(_context.Accounts.ToArray());
-        }
+            var _userAccount = await _accountService.AddAccountAsync(NewAccount);
+            return CreatedAtAction(nameof(GetById), new { id = NewAccount.Id }, NewAccount);
+        }        
 
-        
-
-        [HttpPut("TopUpBalance/{id}")]
-        public IActionResult TopUpBalance(int id, decimal diposit)
+        [HttpPut("TopUp/{id}")]
+        public async Task<IActionResult> TopUp(int id, decimal diposit)
         {
-            var _userAccount = _context.Accounts.FirstOrDefault(w => w.Id == id);
-            if (_userAccount == null) return NotFound();
-
-            if (_userAccount.Blocked) return Content("Счет заблокирован!");
-            else if (diposit > 0)
-            {
-                _userAccount.Balance += Decimal.Round(diposit, 2);
-                _context.SaveChanges();
-                return Ok();
-            }
-            else return Content("Сумма для пополнения не может быть меньше либо равна 0!");
+            var _userAccount = await _accountService.TopUpBalanceAccount(id, diposit);
+            if (_userAccount == null) return NotFound("Счет не найден или заблокирован");
+            else return Ok();
         }
 
-
-        [HttpPut("Transfer")]
-        public IActionResult TransferMoney(int senderid, int recipientid, decimal diposit)
-        {
-            var _sender = _context.Accounts.FirstOrDefault(w => w.Id == senderid);
-            var _recipient = _context.Accounts.FirstOrDefault(w => w.Id == recipientid);
-            if (_sender == null) return Content("Счет отправителя не найден!");
-            if (_recipient == null) return Content("Счет получателя не найден!");
-            if(_sender.Blocked) return Content("Счет отправителя заблокирован!");
-            if (_recipient.Blocked) return Content("Счет получателя заблокирован!");
-
-            if (diposit > 0 && diposit<=_sender.Balance) {
-                _sender.Balance -= Decimal.Round(diposit, 2);
-                _recipient.Balance += Decimal.Round(diposit, 2);
-                _context.SaveChanges();
-                return Ok();
-            }
-            else return Content("Неверная сумма перевода или недостаточно средств для перевода!");
-        }
-
-
-        [HttpPut("WithdrawMoney/{id}")]
-        public IActionResult WithdrawMoney(int id, decimal diposit)
+         [HttpPut("Withdraw/{id}")]
+        public async Task<IActionResult> Withdraw(int id, decimal diposit)
         {
             
-            var _userAccount = _context.Accounts.FirstOrDefault(w => w.Id == id);
-            if (_userAccount == null) return NotFound();
+            var _userAccount = await _accountService.WithdrawMoneyAccount(id, diposit);
+            if (_userAccount == null) return NotFound("Счет не найден или заблокирован");
+            else return Ok();
+        }
 
-            if (_userAccount.Blocked)  return Content("Счет заблокирован!");
-            else if (_userAccount.Balance >= diposit)
-            {
-                _userAccount.Balance -= Decimal.Round(diposit, 2);
-                _context.SaveChanges();
-                return Ok();
-            }
-            else return Content("Недостаточно средств для снятия!");
+        [HttpPut("Transfer")]
+        public async Task<IActionResult> Transfer(int senderid, int recipientid, decimal diposit)
+        {
+            var result = await _accountService.TransferMoneyAccount(senderid, recipientid, diposit);
+             if (result == null) return NotFound("Счет не найден или заблокирован");
+            else return Ok();
         }
 
         [HttpPut("BlockAccount/{id}")]
-        public IActionResult BlockAccount(int id)
+        public async Task<IActionResult> BlockAccount(int id)
         {
-            var _userAccount = _context.Accounts.FirstOrDefault(w => w.Id == id);
-            if (_userAccount == null) return NotFound();
-            else 
-            {
-                _userAccount.Blocked = true;
-                _context.SaveChanges();
-                return Ok();
-            }
+            var _userAccount = await _accountService.BlockAccountById(id);
+            if (_userAccount == null) return NotFound("Счет не найден");
+            else return Ok();
         }
 
         [HttpPut("UnblockAccount/{id}")]
-        public IActionResult UnblockAccount(int id)
+        public async Task<IActionResult> UnblockAccount(int id)
         {
-            var _userAccount = _context.Accounts.FirstOrDefault(w => w.Id == id);
-            if (_userAccount == null) return NotFound();
-            else
-            {
-                _userAccount.Blocked = false;
-                _context.SaveChanges();
-                return Ok();
-            }
+            var _userAccount = await _accountService.UnblockAccountById(id);
+            if (_userAccount == null) return NotFound("Счет не найден");
+            else return Ok();
         }
 
 
         [HttpDelete("Delete/{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var _userAccount = _context.Accounts.FirstOrDefault(w => w.Id == id);
-            if (_userAccount == null) return NotFound();
-            else
-            {
-                _context.Accounts.Remove(_userAccount);
-                _context.SaveChanges();
-                return Ok();
-            }
+            var _userAccount = _accountService.DeleteAccountByIdAsync(id);
+            if (_userAccount == null) return NotFound("Счет не найден");
+            else return Ok();
         }
 
     }

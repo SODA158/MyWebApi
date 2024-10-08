@@ -10,8 +10,4 @@ public class AppDBContext : DbContext
     : base(options)
     {
     }
-
-
-    
-
 }
