@@ -22,75 +22,140 @@ namespace MyWebApi.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            var _accounts = _accountService.GetAllAccountAsync();
-            if (_accounts.Result.Count() == 0) return NotFound("Нет созданных счетов");
-            return Ok(_accounts.Result);
+            try 
+            {
+                var _accounts = await _accountService.GetAllAccountAsync();
+                if (_accounts == null) return NotFound("Нет созданных счетов");
+                return Ok(_accounts);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+           
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var _userAccount = await _accountService.GetAccountByIdAsync(id);
-            if (_userAccount == null) return NotFound();
-            else return Ok(_userAccount);
+            
+            try
+            {
+                var _userAccount = await _accountService.GetAccountByIdAsync(id);
+                if (_userAccount == null) return NotFound();
+                else return Ok(_userAccount);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(Account NewAccount)
         {
-            var _userAccount = await _accountService.AddAccountAsync(NewAccount);
-            return CreatedAtAction(nameof(GetById), new { id = NewAccount.Id }, NewAccount);
+            try
+            {
+                var _userAccount = await _accountService.AddAccountAsync(NewAccount);
+                return CreatedAtAction(nameof(GetById), new { id = NewAccount.Id }, NewAccount);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }        
 
         [HttpPut("TopUp/{id}")]
         public async Task<IActionResult> TopUp(int id, decimal diposit)
         {
-            var _userAccount = await _accountService.TopUpBalanceAccount(id, diposit);
-            if (_userAccount == null) return NotFound("Счет не найден или заблокирован");
-            else return Ok();
+            try
+            {
+                var _userAccount = await _accountService.TopUpBalanceAccount(id, diposit);
+                if (_userAccount == null) return NotFound("Счет не найден или заблокирован");
+                else return Ok();
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
 
          [HttpPut("Withdraw/{id}")]
         public async Task<IActionResult> Withdraw(int id, decimal diposit)
         {
-            
-            var _userAccount = await _accountService.WithdrawMoneyAccount(id, diposit);
-            if (_userAccount == null) return NotFound("Счет не найден или заблокирован");
-            else return Ok();
+            try
+            {
+                var _userAccount = await _accountService.WithdrawMoneyAccount(id, diposit);
+                if (_userAccount == null) return NotFound("Счет не найден или заблокирован");
+                else return Ok();
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
 
         [HttpPut("Transfer")]
         public async Task<IActionResult> Transfer(int senderid, int recipientid, decimal diposit)
         {
-            var result = await _accountService.TransferMoneyAccount(senderid, recipientid, diposit);
-             if (result == null) return NotFound("Счет не найден или заблокирован");
-            else return Ok();
+            try
+            {
+                var result = await _accountService.TransferMoneyAccount(senderid, recipientid, diposit);
+                if (result == null) return NotFound("Счет не найден или заблокирован");
+                else return Ok();
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
 
         [HttpPut("BlockAccount/{id}")]
         public async Task<IActionResult> BlockAccount(int id)
         {
-            var _userAccount = await _accountService.BlockAccountById(id);
-            if (_userAccount == null) return NotFound("Счет не найден");
-            else return Ok();
+            try
+            {
+                var _userAccount = await _accountService.BlockAccountById(id);
+                if (_userAccount == null) return NotFound("Счет не найден");
+                else return Ok();
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
         }
 
         [HttpPut("UnblockAccount/{id}")]
         public async Task<IActionResult> UnblockAccount(int id)
         {
-            var _userAccount = await _accountService.UnblockAccountById(id);
-            if (_userAccount == null) return NotFound("Счет не найден");
-            else return Ok();
+            try
+            {
+                var _userAccount = await _accountService.UnblockAccountById(id);
+                if (_userAccount == null) return NotFound("Счет не найден");
+                else return Ok();
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
         }
 
 
         [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var _userAccount = _accountService.DeleteAccountByIdAsync(id);
-            if (_userAccount.Result == null) return NotFound("Счет не найден");
-            else return Ok();
+            try
+            {
+                var _userAccount = await _accountService.DeleteAccountByIdAsync(id);
+                if (_userAccount == null) return NotFound("Счет не найден");
+                else return Ok();
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }           
         }
-
     }
 }
