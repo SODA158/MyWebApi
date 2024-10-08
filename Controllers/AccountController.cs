@@ -17,7 +17,6 @@ namespace MyWebApi.Controllers
        public AccountController(AppDBContext context)
         {
             _context = context;
-            //_context.SaveChanges(); 
         }
 
 
