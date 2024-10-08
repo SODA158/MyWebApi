@@ -101,7 +101,7 @@ public class AccountRepository : IAccountRepository{
         else return null;
     }
     
-    public async Task<Account> DeleteByIdAsync(int AccountsId){
+    public async Task<Account?> DeleteByIdAsync(int AccountsId){
         var _account = await _context.Accounts
             .FirstOrDefaultAsync(x => x.Id == AccountsId);
         if (_account != null)

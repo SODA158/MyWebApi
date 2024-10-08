@@ -48,6 +48,7 @@ public class AccountService: IAccountService
     }
 
     public async Task<Account> DeleteAccountByIdAsync(int accountId){
-        return await _accountRepository.DeleteByIdAsync(accountId);
+        var result = await _accountRepository.DeleteByIdAsync(accountId);
+        return result;
     }
 }

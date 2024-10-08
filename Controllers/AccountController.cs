@@ -23,7 +23,8 @@ namespace MyWebApi.Controllers
         public async Task<IActionResult> GetAll()
         {
             var _accounts = _accountService.GetAllAccountAsync();
-            return Ok(_accounts);
+            if (_accounts.Result.Count() == 0) return NotFound("Нет созданных счетов");
+            return Ok(_accounts.Result);
         }
 
         [HttpGet("{id}")]
@@ -87,7 +88,7 @@ namespace MyWebApi.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var _userAccount = _accountService.DeleteAccountByIdAsync(id);
-            if (_userAccount == null) return NotFound("Счет не найден");
+            if (_userAccount.Result == null) return NotFound("Счет не найден");
             else return Ok();
         }
 
