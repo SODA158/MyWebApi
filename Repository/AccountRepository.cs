@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MyWebApi;
+using System.Security.Principal;
 
 public class AccountRepository : IAccountRepository{
 
@@ -17,100 +18,34 @@ public class AccountRepository : IAccountRepository{
         return await _context.Accounts.FirstOrDefaultAsync(x=>x.Id == accountId);
     }
     
-    
     public async Task<Account> AddAsync(Account account){
-        var newAccounts = await _context.Accounts.AddAsync(account);
+        var _addedAccounts = await _context.Accounts.AddAsync(account);
         await _context.SaveChangesAsync();
-        return newAccounts.Entity;
+        return _addedAccounts.Entity;
     }
 
     public async Task<Account> UpdateAsync(Account account){
-        var newAccounts = await _context.Accounts.FirstOrDefaultAsync(x => x.Id == account.Id);
-        if(newAccounts!=null){
-            newAccounts = account;
-            await _context.SaveChangesAsync();
-            return newAccounts;
-        }
-        return null;
-    }
-    public async Task<Account> TopUpBalance(Account Account){
-        var newAccounts = await _context.Accounts.FirstOrDefaultAsync(x=>x.Id == Account.Id);
-        if(newAccounts!=null){
-            newAccounts = Account;
-            await _context.SaveChangesAsync();
-            return newAccounts;
-        }
-        else return null;
-    }
-
-    public async Task<Account> TopUpBalance(int id, decimal diposit){
-        var newAccounts = await _context.Accounts.FirstOrDefaultAsync(x=>x.Id == id);
-        if(newAccounts!=null && newAccounts.Blocked==false){
-            newAccounts.Balance += diposit;
-            await _context.SaveChangesAsync();
-            return newAccounts;
-        }
-        else return null;
-    }
-
-    public async Task<Account> WithdrawMoney(int id, decimal diposit){
-        var newAccounts = await _context.Accounts.FirstOrDefaultAsync(x=>x.Id == id);
-        if(newAccounts!=null  && diposit<=newAccounts.Balance && newAccounts.Blocked==false){
-            newAccounts.Balance -= diposit;
-            await _context.SaveChangesAsync();
-            return newAccounts;
-        }
-        else return null;
-    }
-    public async Task<Account> TransferMoney(int senderId, int recipientId, decimal diposit){
-        var senderAccounts = await _context.Accounts.FirstOrDefaultAsync(x=>x.Id == senderId);
-        var recipientAccounts = await _context.Accounts.FirstOrDefaultAsync(x=>x.Id == recipientId);
-
-        if(senderAccounts!=null && recipientAccounts!=null 
-        && diposit<=senderAccounts.Balance 
-        && senderAccounts.Blocked==false && recipientAccounts.Blocked==false)
+        var _updatedAccounts = await _context.Accounts.FirstOrDefaultAsync(x => x.Id == account.Id);
+        if (_updatedAccounts != null)
         {
-            senderAccounts.Balance -= diposit;
-            recipientAccounts.Balance += diposit;
-            await _context.SaveChangesAsync();
-            return recipientAccounts;
-        }
-        else return null;
-    }
+            _updatedAccounts.Name = account.Name;
+            _updatedAccounts.Surname = account.Surname;
+            _updatedAccounts.Email = account.Email;
+            _updatedAccounts.Blocked = account.Blocked;
+            _updatedAccounts.Balance =  account.Balance;
 
-    public async Task<Account> BlockById(int accountId){
-        var _account = await _context.Accounts.FirstOrDefaultAsync(x=>x.Id == accountId);
-        if (_account != null)
-        {
-            _account.Blocked = true;
             await _context.SaveChangesAsync();
-            return _account;
+            return _updatedAccounts;
         }
-        else return null;
+        return _updatedAccounts;
 
     }
 
-    public async Task<Account> UnblockById(int accountId){
-        var _account = await _context.Accounts.FirstOrDefaultAsync(x=>x.Id == accountId);
-        if(_account!=null)
-        { 
-            _account.Blocked = false;
-            await _context.SaveChangesAsync();
-            return _account;
-        }
-        else return null;
-    }
-    
-    public async Task<Account?> DeleteByIdAsync(int AccountsId){
-        var _account = await _context.Accounts
-            .FirstOrDefaultAsync(x => x.Id == AccountsId);
-        if (_account != null)
-        {
-            _context.Accounts.Remove(_account);
-            await _context.SaveChangesAsync();
-            return _account;
-        }
-        else return null;
+    public async void DeleteByIdAsync(int AccountsId)
+    {
+        var _deletedAccounts = await _context.Accounts.FirstOrDefaultAsync(x => x.Id == AccountsId);
+        if (_deletedAccounts != null) _context.Accounts.Remove(_deletedAccounts);
+        await _context.SaveChangesAsync();
     }
 
     
